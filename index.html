@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lecture Playlist</title>
+
+  <!-- Google Fonts for a clean look -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+      color: #111827;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-weight: 600;
+    }
+
+    #videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      justify-items: center;
+    }
+
+    .video {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .video:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .thumbnail {
+      width: 100%;
+      display: block;
+    }
+
+    .info {
+      padding: 0.75rem 1rem 1rem;
+    }
+
+    .info h3 {
+      font-size: 1rem;
+      margin: 0.5rem 0;
+      font-weight: 600;
+    }
+
+    .info a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Lecture Playlist</h1>
+
+  <div id="videos">Loading lectures...</div>
+
+  <footer>© 2025 Your Organization Name</footer>
+
+  <script>
+    // === CONFIGURATION ===
+    const PLAYLIST_ID = 'YOUR_PLAYLIST_ID'; // e.g. 'PL8dPuuaLjXtNlUrzyH5r6jN9ulIgZBpdo'
+    const API_KEY = 'YOUR_API_KEY'; // YouTube Data API v3 key
+
+    async function loadPlaylist() {
+      const container = document.getElementById('videos');
+      container.textContent = 'Loading lectures...';
+
+      try {
+        const response = await fetch(
+          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${PLAYLIST_ID}&key=${API_KEY}`
+        );
+        const data = await response.json();
+
+        container.innerHTML = ''; // Clear loading text
+
+        if (!data.items || data.items.length === 0) {
+          container.textContent = 'No videos found in this playlist.';
+          return;
+        }
+
+        data.items.forEach(item => {
+          const snippet = item.snippet;
+          const videoId = snippet.resourceId.videoId;
+          const title = snippet.title;
+          const thumb = snippet.thumbnails.medium.url;
+
+          const videoEl = document.createElement('div');
+          videoEl.className = 'video';
+          videoEl.innerHTML = `
+            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
+              <img class="thumbnail" src="${thumb}" alt="${title}">
+            </a>
+            <div class="info">
+              <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
+                <h3>${title}</h3>
+              </a>
+            </div>
+          `;
+          container.appendChild(videoEl);
+        });
+      } catch (err) {
+        console.error(err);
+        container.textContent = 'Error loading playlist. Check your API key and playlist ID.';
+      }
+    }
+
+    loadPlaylist();
+  </script>
+</body>
+</html>
