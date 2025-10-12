@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lecture Playlist</title>
 
-  <!-- Google Fonts for a clean look -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
@@ -38,6 +37,7 @@
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       width: 100%;
       max-width: 420px;
+      cursor: pointer;
     }
 
     .video:hover {
@@ -60,9 +60,49 @@
       font-weight: 600;
     }
 
-    .info a {
-      text-decoration: none;
-      color: inherit;
+    /* Modal Styles */
+    #playerModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #playerModal.active {
+      display: flex;
+    }
+
+    #playerContainer {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      background: black;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    #closeModal {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      color: white;
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    iframe {
+      width: 100%;
+      height: 450px;
+      border: none;
     }
 
     footer {
@@ -79,6 +119,14 @@
 
   <div id="videos">Loading lectures...</div>
 
+  <!-- Modal for Embedded Player -->
+  <div id="playerModal">
+    <div id="playerContainer">
+      <button id="closeModal">&times;</button>
+      <iframe id="playerFrame" src="" allowfullscreen></iframe>
+    </div>
+  </div>
+
   <footer>© 2025 Your Organization Name</footer>
 
   <script>
@@ -86,8 +134,12 @@
     const PLAYLIST_ID = 'PLPyL9WUlsosnF2LGko0TpR4epFFuc7Om2'; // e.g. 'PL8dPuuaLjXtNlUrzyH5r6jN9ulIgZBpdo'
     const API_KEY = 'AIzaSyDgmRl9Thw11FsJ5tnEbf6ztdGDFEq3HT0'; // YouTube Data API v3 key
 
+    const container = document.getElementById('videos');
+    const modal = document.getElementById('playerModal');
+    const playerFrame = document.getElementById('playerFrame');
+    const closeModal = document.getElementById('closeModal');
+
     async function loadPlaylist() {
-      const container = document.getElementById('videos');
       container.textContent = 'Loading lectures...';
 
       try {
@@ -96,7 +148,7 @@
         );
         const data = await response.json();
 
-        container.innerHTML = ''; // Clear loading text
+        container.innerHTML = '';
 
         if (!data.items || data.items.length === 0) {
           container.textContent = 'No videos found in this playlist.';
@@ -112,15 +164,16 @@
           const videoEl = document.createElement('div');
           videoEl.className = 'video';
           videoEl.innerHTML = `
-            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
-              <img class="thumbnail" src="${thumb}" alt="${title}">
-            </a>
-            <div class="info">
-              <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
-                <h3>${title}</h3>
-              </a>
-            </div>
+            <img class="thumbnail" src="${thumb}" alt="${title}">
+            <div class="info"><h3>${title}</h3></div>
           `;
+
+          // When clicked, open modal and play video
+          videoEl.addEventListener('click', () => {
+            playerFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            modal.classList.add('active');
+          });
+
           container.appendChild(videoEl);
         });
       } catch (err) {
@@ -128,6 +181,20 @@
         container.textContent = 'Error loading playlist. Check your API key and playlist ID.';
       }
     }
+
+    // Close modal
+    closeModal.addEventListener('click', () => {
+      modal.classList.remove('active');
+      playerFrame.src = '';
+    });
+
+    // Close on background click
+    modal.addEventListener('click', e => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        playerFrame.src = '';
+      }
+    });
 
     loadPlaylist();
   </script>
